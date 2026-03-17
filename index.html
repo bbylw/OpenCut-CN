@@ -1,540 +1,508 @@
 <!DOCTYPE html>
 <html lang="zh-CN" class="scroll-smooth">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenCut — 免费开源视频编辑器</title>
-  <meta name="description" content="OpenCut 是一个免费、开源的视频编辑器，适用于 Web、桌面和移动设备。隐私优先，无水印，无订阅。" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            display: ['"Space Grotesk"', '"Noto Sans SC"', 'sans-serif'],
-            body: ['"Noto Sans SC"', '"Space Grotesk"', 'sans-serif'],
-          },
-          colors: {
-            surface: {
-              950: '#08080a',
-              900: '#0f0f13',
-              800: '#16161d',
-              700: '#1e1e28',
-              600: '#2a2a38',
-            },
-            accent: {
-              DEFAULT: '#6ee7b7',
-              light: '#a7f3d0',
-              dim: '#34d399',
-              glow: 'rgba(110, 231, 183, 0.15)',
-            },
-          },
-        },
-      },
-    }
-  </script>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: 'Noto Sans SC', 'Space Grotesk', sans-serif; background: #08080a; color: #e4e4e7; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCut - 免费开源视频编辑器</title>
 
-    /* Grain overlay */
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-      opacity: 0.03;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    /* Hero glow */
-    .hero-glow {
-      position: absolute;
-      width: 600px; height: 600px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(110,231,183,0.08) 0%, transparent 70%);
-      top: -200px; left: 50%; transform: translateX(-50%);
-      pointer-events: none;
-    }
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-    /* Animations */
-    @keyframes fade-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-    .anim-fade-up { animation: fade-up 0.7s ease-out both; }
-    .anim-delay-1 { animation-delay: 0.1s; }
-    .anim-delay-2 { animation-delay: 0.2s; }
-    .anim-delay-3 { animation-delay: 0.3s; }
-    .anim-delay-4 { animation-delay: 0.4s; }
-    .anim-delay-5 { animation-delay: 0.5s; }
-    .anim-delay-6 { animation-delay: 0.6s; }
-
-    /* Card hover */
-    .feature-card {
-      background: linear-gradient(135deg, rgba(30,30,40,0.7), rgba(22,22,29,0.9));
-      border: 1px solid rgba(110,231,183,0.08);
-      transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-    }
-    .feature-card:hover {
-      border-color: rgba(110,231,183,0.25);
-      box-shadow: 0 0 40px rgba(110,231,183,0.06);
-      transform: translateY(-4px);
-    }
-
-    /* Code block */
-    .code-block {
-      background: #0f0f13;
-      border: 1px solid rgba(110,231,183,0.1);
-      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #08080a; }
-    ::-webkit-scrollbar-thumb { background: #2a2a38; border-radius: 3px; }
-
-    /* Structure marker */
-    .struct-line {
-      width: 2px;
-      background: linear-gradient(to bottom, rgba(110,231,183,0.3), transparent);
-    }
-
-    .glow-badge {
-      background: rgba(110,231,183,0.08);
-      border: 1px solid rgba(110,231,183,0.15);
-      color: #6ee7b7;
-    }
-
-    .sponsor-badge {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      transition: border-color 0.3s, background 0.3s;
-    }
-    .sponsor-badge:hover {
-      border-color: rgba(110,231,183,0.2);
-      background: rgba(110,231,183,0.05);
-    }
-
-    .step-num {
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 10px;
-      background: rgba(110,231,183,0.1);
-      border: 1px solid rgba(110,231,183,0.2);
-      color: #6ee7b7;
-      font-family: 'Space Grotesk', monospace;
-      font-weight: 600;
-      font-size: 0.875rem;
-      flex-shrink: 0;
-    }
-  </style>
+    <style>
+        /* 隐藏用于全局定义 SVG 渐变的容器 */
+        .svg-defs-container {
+            display: none;
+        }
+    </style>
 </head>
-<body class="antialiased">
 
-  <!-- Navigation -->
-  <nav class="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-surface-950/70 border-b border-white/5">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <a href="#" class="flex items-center gap-3 group">
-        <svg class="w-8 h-8" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="40" height="40" rx="10" fill="#6ee7b7"/>
-          <path d="M12 14L20 10L28 14V22L20 30L12 22V14Z" fill="#08080a" stroke="#08080a" stroke-width="1"/>
-          <path d="M20 10V30" stroke="#6ee7b7" stroke-width="1.5"/>
-          <path d="M12 14L28 22" stroke="#6ee7b7" stroke-width="1.5"/>
-          <path d="M28 14L12 22" stroke="#6ee7b7" stroke-width="1.5"/>
-          <circle cx="20" cy="18" r="3" fill="#6ee7b7"/>
-        </svg>
-        <span class="font-display font-bold text-lg text-white tracking-tight">OpenCut</span>
-      </a>
-      <div class="hidden md:flex items-center gap-8 text-sm text-zinc-400">
-        <a href="#features" class="hover:text-accent transition-colors">功能</a>
-        <a href="#structure" class="hover:text-accent transition-colors">架构</a>
-        <a href="#quickstart" class="hover:text-accent transition-colors">快速开始</a>
-        <a href="#contribute" class="hover:text-accent transition-colors">贡献</a>
-      </div>
-      <a href="https://github.com/OpenCut-app/OpenCut" target="_blank" rel="noopener" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-white/5 border border-white/10 hover:border-accent/30 hover:bg-accent/5 transition-all">
-        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-        GitHub
-      </a>
-    </div>
-  </nav>
+<body class="min-h-screen bg-zinc-950 text-zinc-200 font-sans selection:bg-blue-500/30">
 
-  <!-- Hero -->
-  <section class="relative pt-32 pb-20 md:pt-44 md:pb-32 overflow-hidden">
-    <div class="hero-glow"></div>
-    <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
-      <div class="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full glow-badge text-xs font-medium tracking-wide mb-8">
-        <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
-        开源 · 免费 · 隐私优先
-      </div>
-      <h1 class="anim-fade-up anim-delay-1 font-display text-4xl sm:text-5xl md:text-7xl font-bold text-white leading-[1.1] tracking-tight">
-        视频编辑<br class="sm:hidden" />的<span class="text-accent">自由</span>时代
-      </h1>
-      <p class="anim-fade-up anim-delay-2 mt-6 text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-        OpenCut 是一个免费、开源的视频编辑器，<br class="hidden sm:block" />适用于 Web、桌面和移动设备。无水印，无订阅。
-      </p>
-      <div class="anim-fade-up anim-delay-3 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a href="#quickstart" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-accent text-surface-950 font-semibold text-sm hover:bg-accent-light transition-colors text-center">
-          开始使用
-        </a>
-        <a href="https://github.com/OpenCut-app/OpenCut" target="_blank" rel="noopener" class="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 text-white font-medium text-sm hover:border-accent/30 hover:bg-accent/5 transition-all text-center">
-          查看源代码 →
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why OpenCut -->
-  <section id="features" class="py-20 md:py-28">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16 anim-fade-up">
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">为什么选择 OpenCut？</h2>
-        <p class="mt-4 text-zinc-500 text-lg">简单、免费、尊重隐私的视频编辑体验</p>
-      </div>
-      <div class="grid md:grid-cols-3 gap-5">
-        <div class="feature-card rounded-2xl p-7 anim-fade-up anim-delay-1">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-          </div>
-          <h3 class="font-display text-lg font-semibold text-white mb-2">隐私保护</h3>
-          <p class="text-zinc-400 text-sm leading-relaxed">您的视频始终保留在本地设备上。没有云端上传，没有数据追踪，完全由您掌控。</p>
-        </div>
-        <div class="feature-card rounded-2xl p-7 anim-fade-up anim-delay-2">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.25-9.75h18.5"/></svg>
-          </div>
-          <h3 class="font-display text-lg font-semibold text-white mb-2">完全免费</h3>
-          <p class="text-zinc-400 text-sm leading-relaxed">CapCut 的许多基础功能已开始收费。OpenCut 让这些功能重新免费，且永远不会改变。</p>
-        </div>
-        <div class="feature-card rounded-2xl p-7 anim-fade-up anim-delay-3">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5">
-            <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.58-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/></svg>
-          </div>
-          <h3 class="font-display text-lg font-semibold text-white mb-2">简单易用</h3>
-          <p class="text-zinc-400 text-sm leading-relaxed">CapCut 证明了人们需要简单的编辑器。OpenCut 延续这一理念，让每个人都能轻松创作。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid -->
-  <section class="py-20 md:py-28 border-t border-white/5">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">功能特性</h2>
-        <p class="mt-4 text-zinc-500 text-lg">专业级工具，零门槛体验</p>
-      </div>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">时间线编辑</h4>
-            <p class="text-xs text-zinc-500 mt-1">直观的时间线操作界面</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75 6.429 9.75m11.142 0l4.179 2.25-9.75 5.25-9.75-5.25 4.179-2.25"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">多轨道支持</h4>
-            <p class="text-xs text-zinc-500 mt-1">同时处理多条音视频轨道</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">实时预览</h4>
-            <p class="text-xs text-zinc-500 mt-1">即时查看编辑效果</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">无水印</h4>
-            <p class="text-xs text-zinc-500 mt-1">导出作品不附加任何水印</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">无订阅</h4>
-            <p class="text-xs text-zinc-500 mt-1">不需要付费订阅即可使用</p>
-          </div>
-        </div>
-        <div class="flex items-start gap-4 p-5 rounded-xl bg-white/[0.02] border border-white/5 hover:border-accent/15 transition-colors">
-          <div class="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-semibold text-white">匿名分析</h4>
-            <p class="text-xs text-zinc-500 mt-1">100% 匿名且无侵入性数据分析</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sponsors -->
-  <section class="py-16 border-t border-white/5">
-    <div class="max-w-6xl mx-auto px-6 text-center">
-      <p class="text-xs uppercase tracking-[0.2em] text-zinc-600 mb-8 font-medium">赞助商</p>
-      <div class="flex flex-wrap items-center justify-center gap-4">
-        <a href="https://vercel.com?utm_source=github-opencut&utm_campaign=oss" target="_blank" rel="noopener" class="sponsor-badge rounded-xl px-6 py-4 flex items-center gap-3">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/></svg>
-          <span class="text-sm text-zinc-300 font-medium">Vercel</span>
-        </a>
-        <a href="https://fal.ai?utm_source=github-opencut&utm_campaign=oss" target="_blank" rel="noopener" class="sponsor-badge rounded-xl px-6 py-4 flex items-center gap-3">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L13.09 8.26L20 10L13.09 15.74L12 22L10.91 15.74L4 10L10.91 8.26L12 2Z"/></svg>
-          <span class="text-sm text-zinc-300 font-medium">fal.ai</span>
-        </a>
-      </div>
-      <p class="mt-5 text-xs text-zinc-600">感谢 Vercel 和 fal.ai 对开源软件的支持</p>
-    </div>
-  </section>
-
-  <!-- Project Structure -->
-  <section id="structure" class="py-20 md:py-28 border-t border-white/5">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center mb-14">
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">项目结构</h2>
-        <p class="mt-4 text-zinc-500">清晰的模块化架构</p>
-      </div>
-      <div class="code-block rounded-2xl p-6 md:p-8 text-sm space-y-3">
-        <div class="flex items-center gap-3 text-accent font-semibold">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
-          apps/web/
-          <span class="text-zinc-600 font-normal">— Next.js 主 Web 应用</span>
-        </div>
-        <div class="pl-8 space-y-2.5 border-l-2 border-accent/10 ml-2">
-          <div class="flex items-center gap-3">
-            <span class="text-zinc-300">src/components/</span>
-            <span class="text-zinc-600">— UI 和编辑器组件</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-zinc-300">src/hooks/</span>
-            <span class="text-zinc-600">— 自定义 React Hooks</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-zinc-300">src/lib/</span>
-            <span class="text-zinc-600">— 工具函数和 API 逻辑</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-zinc-300">src/stores/</span>
-            <span class="text-zinc-600">— 状态管理（Zustand 等）</span>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="text-zinc-300">src/types/</span>
-            <span class="text-zinc-600">— TypeScript 类型定义</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Quick Start -->
-  <section id="quickstart" class="py-20 md:py-28 border-t border-white/5">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center mb-14">
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">快速开始</h2>
-        <p class="mt-4 text-zinc-500">几分钟内启动本地开发环境</p>
-      </div>
-
-      <!-- Prerequisites -->
-      <div class="mb-10 flex flex-wrap gap-3 justify-center">
-        <span class="glow-badge rounded-lg px-4 py-2 text-xs font-medium">Bun</span>
-        <span class="glow-badge rounded-lg px-4 py-2 text-xs font-medium">Docker <span class="text-zinc-500">（可选）</span></span>
-        <span class="glow-badge rounded-lg px-4 py-2 text-xs font-medium">Docker Compose <span class="text-zinc-500">（可选）</span></span>
-      </div>
-      <p class="text-center text-xs text-zinc-600 mb-12">Docker 是可选的，但推荐用于运行本地数据库和 Redis。如果只想开发前端功能，可以跳过 Docker。</p>
-
-      <!-- Steps -->
-      <div class="space-y-6">
-        <div class="flex gap-5">
-          <div class="step-num">1</div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-white mb-1">Fork 并克隆仓库</h4>
-          </div>
-        </div>
-
-        <div class="flex gap-5">
-          <div class="step-num">2</div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-white mb-3">复制环境文件</h4>
-            <div class="code-block rounded-xl p-4 text-xs leading-relaxed">
-              <p class="text-zinc-500 mb-1"># Unix/Linux/Mac</p>
-              <p class="text-zinc-200">cp apps/web/.env.example apps/web/.env.local</p>
-              <p class="text-zinc-500 mt-3 mb-1"># Windows PowerShell</p>
-              <p class="text-zinc-200">Copy-Item apps/web/.env.example apps/web/.env.local</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex gap-5">
-          <div class="step-num">3</div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-white mb-3">启动数据库和 Redis</h4>
-            <div class="code-block rounded-xl p-4 text-xs">
-              <p class="text-zinc-200">docker compose up -d db redis serverless-redis-http</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex gap-5">
-          <div class="step-num">4</div>
-          <div class="flex-1">
-            <h4 class="text-sm font-semibold text-white mb-3">安装依赖并启动</h4>
-            <div class="code-block rounded-xl p-4 text-xs leading-relaxed">
-              <p class="text-zinc-200">bun install</p>
-              <p class="text-zinc-200">bun dev:web</p>
-            </div>
-            <p class="mt-3 text-xs text-zinc-500">应用将在 <code class="text-accent/80 bg-accent/5 px-1.5 py-0.5 rounded">http://localhost:3000</code> 可访问</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Docker Self-hosting -->
-      <div class="mt-14 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
-        <h4 class="font-display font-semibold text-white mb-1">🐳 使用 Docker 自托管</h4>
-        <p class="text-xs text-zinc-500 mb-4">使用 Docker 运行所有服务（包括应用的生产构建）</p>
-        <div class="code-block rounded-xl p-4 text-xs">
-          <p class="text-zinc-200">docker compose up -d</p>
-        </div>
-        <p class="mt-3 text-xs text-zinc-500">应用将在 <code class="text-accent/80 bg-accent/5 px-1.5 py-0.5 rounded">http://localhost:3100</code> 可访问</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contributing -->
-  <section id="contribute" class="py-20 md:py-28 border-t border-white/5">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center mb-14">
-        <h2 class="font-display text-3xl md:text-4xl font-bold text-white tracking-tight">贡献指南</h2>
-        <p class="mt-4 text-zinc-500">我们欢迎贡献！一起建设更好的视频编辑工具</p>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-5">
-        <div class="p-6 rounded-2xl bg-accent/[0.03] border border-accent/10">
-          <h4 class="flex items-center gap-2 text-sm font-semibold text-accent mb-3">
-            <span>🎯</span> 重点领域
-          </h4>
-          <ul class="space-y-2 text-sm text-zinc-400">
-            <li class="flex items-start gap-2"><span class="text-accent/60 mt-1">›</span> 时间线功能</li>
-            <li class="flex items-start gap-2"><span class="text-accent/60 mt-1">›</span> 项目管理</li>
-            <li class="flex items-start gap-2"><span class="text-accent/60 mt-1">›</span> 性能优化</li>
-            <li class="flex items-start gap-2"><span class="text-accent/60 mt-1">›</span> 错误修复</li>
-            <li class="flex items-start gap-2"><span class="text-accent/60 mt-1">›</span> 预览面板之外的 UI 改进</li>
-          </ul>
-        </div>
-        <div class="p-6 rounded-2xl bg-red-500/[0.03] border border-red-500/10">
-          <h4 class="flex items-center gap-2 text-sm font-semibold text-red-400 mb-3">
-            <span>⚠️</span> 目前避免
-          </h4>
-          <ul class="space-y-2 text-sm text-zinc-400">
-            <li class="flex items-start gap-2"><span class="text-red-400/60 mt-1">›</span> 预览面板增强（字体、贴纸、效果）</li>
-            <li class="flex items-start gap-2"><span class="text-red-400/60 mt-1">›</span> 导出功能</li>
-          </ul>
-          <p class="mt-4 text-xs text-zinc-600">正在使用新的二进制渲染方法重构这些功能</p>
-        </div>
-      </div>
-
-      <div class="mt-8 text-center">
-        <a href="https://github.com/OpenCut-app/OpenCut/blob/main/.github/CONTRIBUTING.md" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-white/10 text-sm text-white hover:border-accent/30 hover:bg-accent/5 transition-all">
-          查看完整贡献指南 →
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Star History -->
-  <section class="py-20 md:py-28 border-t border-white/5">
-    <div class="max-w-4xl mx-auto px-6 text-center">
-      <h2 class="font-display text-2xl md:text-3xl font-bold text-white tracking-tight mb-3">Star 增长趋势</h2>
-      <p class="text-zinc-500 text-sm mb-10">加入社区，一起见证 OpenCut 的成长</p>
-      <div class="rounded-2xl overflow-hidden border border-white/5 bg-white/[0.02] p-6 md:p-8">
-        <svg viewBox="0 0 800 320" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full">
-          <!-- Grid lines -->
-          <line x1="60" y1="40" x2="60" y2="260" stroke="#1e1e28" stroke-width="1"/>
-          <line x1="60" y1="260" x2="760" y2="260" stroke="#1e1e28" stroke-width="1"/>
-          <line x1="60" y1="205" x2="760" y2="205" stroke="#1e1e28" stroke-width="0.5" stroke-dasharray="4 4"/>
-          <line x1="60" y1="150" x2="760" y2="150" stroke="#1e1e28" stroke-width="0.5" stroke-dasharray="4 4"/>
-          <line x1="60" y1="95" x2="760" y2="95" stroke="#1e1e28" stroke-width="0.5" stroke-dasharray="4 4"/>
-          <line x1="60" y1="40" x2="760" y2="40" stroke="#1e1e28" stroke-width="0.5" stroke-dasharray="4 4"/>
-          <!-- Y-axis labels -->
-          <text x="50" y="264" text-anchor="end" fill="#52525b" font-size="11" font-family="Space Grotesk, sans-serif">0</text>
-          <text x="50" y="209" text-anchor="end" fill="#52525b" font-size="11" font-family="Space Grotesk, sans-serif">2k</text>
-          <text x="50" y="154" text-anchor="end" fill="#52525b" font-size="11" font-family="Space Grotesk, sans-serif">4k</text>
-          <text x="50" y="99" text-anchor="end" fill="#52525b" font-size="11" font-family="Space Grotesk, sans-serif">6k</text>
-          <text x="50" y="44" text-anchor="end" fill="#52525b" font-size="11" font-family="Space Grotesk, sans-serif">8k</text>
-          <!-- X-axis labels -->
-          <text x="60" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">Jan</text>
-          <text x="177" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">Mar</text>
-          <text x="293" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">May</text>
-          <text x="410" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">Jul</text>
-          <text x="527" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">Sep</text>
-          <text x="643" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">Nov</text>
-          <text x="760" y="282" text-anchor="middle" fill="#52525b" font-size="10" font-family="Space Grotesk, sans-serif">2026</text>
-          <!-- Gradient fill area -->
-          <defs>
-            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#6ee7b7" stop-opacity="0.2"/>
-              <stop offset="100%" stop-color="#6ee7b7" stop-opacity="0"/>
+    <!-- 全局 SVG 定义 (避免在每个 Logo 中重复定义 ID 导致冲突) -->
+    <svg class="svg-defs-container" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="logo-gradient" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#3B82F6" />
+                <stop offset="1" stop-color="#06B6D4" />
             </linearGradient>
-            <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="#34d399"/>
-              <stop offset="100%" stop-color="#6ee7b7"/>
+            <linearGradient id="blade-gradient" x1="40" y1="30" x2="85" y2="90" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#FFFFFF" />
+                <stop offset="1" stop-color="#E2E8F0" />
             </linearGradient>
-          </defs>
-          <path d="M60 255 C80 254, 100 252, 130 248 C160 244, 180 240, 200 232 C220 224, 240 218, 260 208 C280 198, 300 192, 330 178 C360 164, 380 158, 400 148 C420 138, 440 130, 470 118 C500 106, 520 100, 550 90 C580 80, 610 72, 640 66 C670 60, 700 55, 730 50 L760 46 L760 260 L60 260Z" fill="url(#chartGrad)"/>
-          <!-- Line -->
-          <path d="M60 255 C80 254, 100 252, 130 248 C160 244, 180 240, 200 232 C220 224, 240 218, 260 208 C280 198, 300 192, 330 178 C360 164, 380 158, 400 148 C420 138, 440 130, 470 118 C500 106, 520 100, 550 90 C580 80, 610 72, 640 66 C670 60, 700 55, 730 50 L760 46" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-          <!-- Glow dots at key points -->
-          <circle cx="200" cy="232" r="3" fill="#6ee7b7" opacity="0.8"/>
-          <circle cx="200" cy="232" r="7" fill="#6ee7b7" opacity="0.15"/>
-          <circle cx="400" cy="148" r="3" fill="#6ee7b7" opacity="0.8"/>
-          <circle cx="400" cy="148" r="7" fill="#6ee7b7" opacity="0.15"/>
-          <circle cx="600" cy="74" r="3" fill="#6ee7b7" opacity="0.8"/>
-          <circle cx="600" cy="74" r="7" fill="#6ee7b7" opacity="0.15"/>
-          <circle cx="760" cy="46" r="4" fill="#6ee7b7"/>
-          <circle cx="760" cy="46" r="9" fill="#6ee7b7" opacity="0.15"/>
-          <!-- Title -->
-          <text x="410" y="306" text-anchor="middle" fill="#3f3f46" font-size="11" font-family="Space Grotesk, sans-serif">opencut-app/opencut · Star History</text>
-        </svg>
-      </div>
-    </div>
-  </section>
+        </defs>
+    </svg>
 
-  <!-- Footer -->
-  <footer class="border-t border-white/5 py-12">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center gap-3">
-          <svg class="w-6 h-6" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="10" fill="#6ee7b7"/>
-            <path d="M12 14L20 10L28 14V22L20 30L12 22V14Z" fill="#08080a" stroke="#08080a" stroke-width="1"/>
-            <path d="M20 10V30" stroke="#6ee7b7" stroke-width="1.5"/>
-            <path d="M12 14L28 22" stroke="#6ee7b7" stroke-width="1.5"/>
-            <path d="M28 14L12 22" stroke="#6ee7b7" stroke-width="1.5"/>
-            <circle cx="20" cy="18" r="3" fill="#6ee7b7"/>
-          </svg>
-          <span class="text-sm text-zinc-500">OpenCut · MIT 许可证</span>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg viewBox="0 0 120 120" class="w-8 h-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="120" height="120" rx="28" fill="url(#logo-gradient)" />
+                    <path d="M45 35 L75 60 L45 85 Z" fill="url(#blade-gradient)" />
+                    <path d="M85 30 L85 90" stroke="url(#blade-gradient)" stroke-width="10" stroke-linecap="round" />
+                    <path d="M75 60 L95 60" stroke="#000000" stroke-opacity="0.15" stroke-width="6"
+                        stroke-linecap="round" />
+                </svg>
+                <span class="text-xl font-bold text-white tracking-tight">OpenCut</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/OpenCut-app/OpenCut" target="_blank" rel="noopener noreferrer"
+                    class="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                    <span class="hidden sm:inline">GitHub</span>
+                </a>
+            </div>
         </div>
-        <div class="flex items-center gap-6 text-xs text-zinc-600">
-          <a href="https://github.com/OpenCut-app/OpenCut" target="_blank" rel="noopener" class="hover:text-accent transition-colors">GitHub</a>
-          <a href="https://github.com/OpenCut-app/OpenCut/blob/main/LICENSE" target="_blank" rel="noopener" class="hover:text-accent transition-colors">许可证</a>
-          <a href="https://www.databuddy.cc?utm_source=opencut" target="_blank" rel="noopener" class="hover:text-accent transition-colors">Databuddy</a>
-          <a href="https://marblecms.com?utm_source=opencut" target="_blank" rel="noopener" class="hover:text-accent transition-colors">Marble CMS</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+    </nav>
 
+    <!-- Hero 区域 -->
+    <section class="pt-32 pb-20 px-6 relative overflow-hidden">
+        <div
+            class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none">
+        </div>
+
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <div class="flex justify-center mb-8">
+                <svg viewBox="0 0 120 120" class="w-32 h-32 drop-shadow-2xl" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <rect width="120" height="120" rx="28" fill="url(#logo-gradient)" />
+                    <path d="M45 35 L75 60 L45 85 Z" fill="url(#blade-gradient)" />
+                    <path d="M85 30 L85 90" stroke="url(#blade-gradient)" stroke-width="10" stroke-linecap="round" />
+                    <path d="M75 60 L95 60" stroke="#000000" stroke-opacity="0.15" stroke-width="6"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6">
+                下一代 <br class="md:hidden" />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+                    开源视频编辑器
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-zinc-400 mb-10 max-w-2xl mx-auto">
+                一个免费、开源的视频编辑器，适用于 Web、桌面和移动设备。
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#quick-start"
+                    class="w-full sm:w-auto px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2">
+                    <i data-lucide="terminal" class="w-5 h-5"></i>
+                    快速开始
+                </a>
+                <a href="https://github.com/OpenCut-app/OpenCut" target="_blank" rel="noopener noreferrer"
+                    class="w-full sm:w-auto px-8 py-3 bg-zinc-800 text-white font-semibold rounded-full hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 border border-zinc-700">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                    查看源码
+                </a>
+            </div>
+
+            <!-- 赞助商 -->
+            <div class="mt-16 pt-8 border-t border-zinc-800/50">
+                <p class="text-sm text-zinc-500 mb-4 uppercase tracking-wider font-semibold">感谢开源赞助商</p>
+                <div
+                    class="flex flex-wrap justify-center items-center gap-6 opacity-80 hover:opacity-100 transition-opacity">
+                    <a href="https://vercel.com/oss" target="_blank" rel="noopener noreferrer">
+                        <img alt="Powered by Vercel" src="https://img.shields.io/badge/Powered%20by-Vercel-000000?style=flat&logo=vercel&logoColor=white" class="h-6" />
+                    </a>
+                    <a href="https://fal.ai" target="_blank" rel="noopener noreferrer">
+                        <img alt="Powered by fal.ai"
+                            src="https://img.shields.io/badge/Powered%20by-fal.ai-000000?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCAxMEwxMy4wOSAxNS43NEwxMiAyMkwxMC45MSAxNS43NEw0IDEwTDEwLjkxIDguMjZMMTIgMloiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo="
+                            class="h-6" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 为什么选择 OpenCut -->
+    <section class="py-20 px-6 bg-zinc-900/30">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">为什么选择 OpenCut？</h2>
+                <p class="text-zinc-400 max-w-2xl mx-auto">我们致力于打造一个对用户友好、尊重隐私且功能强大的编辑工具。</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- 特性卡片 1 -->
+                <div
+                    class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl hover:bg-zinc-800/50 transition-colors duration-300">
+                    <div
+                        class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="shield" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">隐私保护</h3>
+                    <p class="text-zinc-400">您的视频保留在本地设备上，不经过云端处理，最大程度保护您的数据隐私。</p>
+                </div>
+
+                <!-- 特性卡片 2 -->
+                <div
+                    class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl hover:bg-zinc-800/50 transition-colors duration-300">
+                    <div
+                        class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="unlock" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">完全免费</h3>
+                    <p class="text-zinc-400">CapCut 的大部分基础功能现已收费，而 OpenCut 承诺核心功能永远免费且无订阅。</p>
+                </div>
+
+                <!-- 特性卡片 3 -->
+                <div
+                    class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl hover:bg-zinc-800/50 transition-colors duration-300">
+                    <div
+                        class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center mb-4">
+                        <i data-lucide="thumbs-up" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">简单易用</h3>
+                    <p class="text-zinc-400">人们需要易于使用的视频编辑器 —— CapCut 证明了这一点，我们也秉承这一设计理念。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特性与项目结构 -->
+    <section class="py-20 px-6">
+        <div class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16">
+            <!-- 左侧：功能特性 -->
+            <div>
+                <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                    <i data-lucide="video" class="text-blue-400 w-8 h-8"></i>
+                    核心功能特性
+                </h2>
+                <ul class="space-y-4">
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="layers" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">时间线编辑</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="box" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">多轨道支持</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="play" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">实时预览</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="unlock" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">无水印、无订阅</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="shield" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">由 Databuddy 提供分析服务，100% 匿名且无侵入性。</span>
+                    </li>
+                    <li class="flex items-start gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/50">
+                        <i data-lucide="code" class="text-blue-400 shrink-0 mt-1 w-5 h-5"></i>
+                        <span class="text-zinc-300 leading-relaxed">博客由 Marble 提供支持，无头 CMS。</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- 右侧：项目结构 -->
+            <div>
+                <h2 class="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+                    <i data-lucide="code" class="text-blue-400 w-8 h-8"></i>
+                    项目目录结构
+                </h2>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+                    <div class="px-4 py-3 bg-zinc-800/50 border-b border-zinc-800 flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-xs text-zinc-400 font-mono">Workspace</span>
+                    </div>
+                    <ul class="p-4 font-mono text-sm space-y-3">
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">apps/web/</span>
+                            <span class="text-zinc-500">– Next.js 主 Web 应用</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">src/components/</span>
+                            <span class="text-zinc-500">– UI 和编辑器组件</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">src/hooks/</span>
+                            <span class="text-zinc-500">– 自定义 React Hooks</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">src/lib/</span>
+                            <span class="text-zinc-500">– 工具函数和 API 逻辑</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">src/stores/</span>
+                            <span class="text-zinc-500">– 状态管理（Zustand 等）</span>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="text-blue-400">src/types/</span>
+                            <span class="text-zinc-500">– TypeScript 类型定义</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 快速开始 -->
+    <section id="quick-start" class="py-20 px-6 bg-zinc-900/30 border-y border-zinc-800/50">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">快速开始</h2>
+                <p class="text-zinc-400">几分钟内即可在本地运行 OpenCut。</p>
+            </div>
+
+            <div class="space-y-8">
+                <!-- 前置要求 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="chevron-right" class="text-blue-500 w-5 h-5"></i> 前置要求
+                    </h3>
+                    <ul class="list-disc list-inside text-zinc-300 ml-6 space-y-2">
+                        <li><a href="https://bun.sh/docs/installation" target="_blank" rel="noopener noreferrer"
+                                class="text-blue-400 hover:underline">Bun</a></li>
+                        <li><a href="https://docs.docker.com/get-docker/" target="_blank" rel="noopener noreferrer"
+                                class="text-blue-400 hover:underline">Docker</a> 和 <a
+                                href="https://docs.docker.com/compose/install/" target="_blank"
+                                rel="noopener noreferrer" class="text-blue-400 hover:underline">Docker Compose</a></li>
+                    </ul>
+                    <div
+                        class="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-200/80 text-sm">
+                        <strong>注意：</strong> Docker 是可选的，但推荐用于运行本地数据库和 Redis。如果只想开发前端功能，可以跳过 Docker。
+                    </div>
+                </div>
+
+                <!-- 安装步骤 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="chevron-right" class="text-blue-500 w-5 h-5"></i> 安装步骤
+                    </h3>
+
+                    <div class="space-y-6 ml-6">
+                        <div>
+                            <p class="text-zinc-300 mb-2">1. Fork 并克隆仓库后，复制环境文件：</p>
+                            <!-- 代码块 1 -->
+                            <div
+                                class="relative group rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden my-4">
+                                <div
+                                    class="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
+                                    <span class="text-xs text-zinc-400 font-mono">bash</span>
+                                    <button onclick="copyCode(this, 'code-block-1')"
+                                        class="text-zinc-400 hover:text-white transition-colors p-1" title="复制代码">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <pre class="p-4 overflow-x-auto text-sm text-zinc-300 font-mono"><code id="code-block-1"># Unix/Linux/Mac
+cp apps/web/.env.example apps/web/.env.local
+
+# Windows PowerShell
+Copy-Item apps/web/.env.example apps/web/.env.local</code></pre>
+                            </div>
+                            <p class="text-sm text-zinc-500 mt-2">.env.example 中的默认配置与 Docker Compose 配置相匹配 —— 开箱即用。</p>
+                        </div>
+
+                        <div>
+                            <p class="text-zinc-300 mb-2">2. 启动数据库和 Redis：</p>
+                            <!-- 代码块 2 -->
+                            <div
+                                class="relative group rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden my-4">
+                                <div
+                                    class="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
+                                    <span class="text-xs text-zinc-400 font-mono">bash</span>
+                                    <button onclick="copyCode(this, 'code-block-2')"
+                                        class="text-zinc-400 hover:text-white transition-colors p-1" title="复制代码">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <pre
+                                    class="p-4 overflow-x-auto text-sm text-zinc-300 font-mono"><code id="code-block-2">docker compose up -d db redis serverless-redis-http</code></pre>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-zinc-300 mb-2">3. 安装依赖并启动开发服务器：</p>
+                            <!-- 代码块 3 -->
+                            <div
+                                class="relative group rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden my-4">
+                                <div
+                                    class="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
+                                    <span class="text-xs text-zinc-400 font-mono">bash</span>
+                                    <button onclick="copyCode(this, 'code-block-3')"
+                                        class="text-zinc-400 hover:text-white transition-colors p-1" title="复制代码">
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <pre class="p-4 overflow-x-auto text-sm text-zinc-300 font-mono"><code id="code-block-3">bun install
+bun dev:web</code></pre>
+                            </div>
+                            <p class="text-zinc-300 mt-2">
+                                应用将在 <a href="http://localhost:3000"
+                                    class="text-blue-400 hover:underline">http://localhost:3000</a> 可访问。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docker 自托管 -->
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-3 flex items-center gap-2">
+                        <i data-lucide="chevron-right" class="text-blue-500 w-5 h-5"></i> 使用 Docker 自托管
+                    </h3>
+                    <p class="text-zinc-300 mb-2 ml-6">使用 Docker 运行所有服务（包括应用的生产构建）：</p>
+                    <div class="ml-6">
+                        <!-- 代码块 4 -->
+                        <div class="relative group rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden my-4">
+                            <div
+                                class="flex items-center justify-between px-4 py-2 bg-zinc-800/50 border-b border-zinc-800">
+                                <span class="text-xs text-zinc-400 font-mono">bash</span>
+                                <button onclick="copyCode(this, 'code-block-4')"
+                                    class="text-zinc-400 hover:text-white transition-colors p-1" title="复制代码">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <pre
+                                class="p-4 overflow-x-auto text-sm text-zinc-300 font-mono"><code id="code-block-4">docker compose up -d</code></pre>
+                        </div>
+                        <p class="text-zinc-300 mt-2">
+                            应用将在 <a href="http://localhost:3100"
+                                class="text-blue-400 hover:underline">http://localhost:3100</a> 可访问。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 贡献指南 -->
+    <section class="py-20 px-6">
+        <div
+            class="max-w-4xl mx-auto bg-gradient-to-br from-zinc-900 to-zinc-900/50 border border-zinc-800 rounded-3xl p-8 md:p-12 relative overflow-hidden">
+            <i data-lucide="heart-handshake"
+                class="absolute -top-10 -right-10 text-zinc-800/30 w-64 h-64 pointer-events-none"></i>
+
+            <div class="relative z-10">
+                <h2 class="text-3xl font-bold text-white mb-6">贡献指南</h2>
+                <p class="text-lg text-zinc-300 mb-8">
+                    我们欢迎贡献！虽然我们正在积极开发和重构某些领域，但仍然有很多机会可以有效贡献。
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-zinc-950/50 p-6 rounded-2xl border border-zinc-800/50">
+                        <h4 class="text-green-400 font-semibold mb-3 flex items-center gap-2">
+                            <span>🎯</span> 重点领域
+                        </h4>
+                        <p class="text-zinc-400 text-sm leading-relaxed">
+                            时间线功能、项目管理、性能优化、错误修复以及预览面板之外的 UI 改进。
+                        </p>
+                    </div>
+                    <div class="bg-zinc-950/50 p-6 rounded-2xl border border-zinc-800/50">
+                        <h4 class="text-red-400 font-semibold mb-3 flex items-center gap-2">
+                            <span>⚠️</span> 目前避免
+                        </h4>
+                        <p class="text-zinc-400 text-sm leading-relaxed">
+                            预览面板增强（字体、贴纸、效果）和导出功能 —— 我们正在使用新的二进制渲染方法重构这些功能。
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h4 class="text-white font-semibold mb-3">贡献者快速入门：</h4>
+                    <ul class="list-decimal list-inside text-zinc-400 space-y-2 ml-2">
+                        <li>Fork 仓库并克隆到本地</li>
+                        <li>按照 CONTRIBUTING.md 中的设置说明操作</li>
+                        <li>创建功能分支并提交 PR</li>
+                    </ul>
+                </div>
+
+                <a href="https://github.com/OpenCut-app/OpenCut/blob/main/.github/CONTRIBUTING.md" target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full font-medium transition-colors">
+                    阅读完整贡献指南 <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-zinc-900 bg-zinc-950 pt-16 pb-8 px-6 text-center">
+        <div class="max-w-4xl mx-auto flex flex-col items-center">
+            <!-- Footer Logo -->
+            <svg viewBox="0 0 120 120"
+                class="w-12 h-12 opacity-50 mb-6 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="120" height="120" rx="28" fill="url(#logo-gradient)" />
+                <path d="M45 35 L75 60 L45 85 Z" fill="url(#blade-gradient)" />
+                <path d="M85 30 L85 90" stroke="url(#blade-gradient)" stroke-width="10" stroke-linecap="round" />
+                <path d="M75 60 L95 60" stroke="#000000" stroke-opacity="0.15" stroke-width="6"
+                    stroke-linecap="round" />
+            </svg>
+
+            <div class="mb-10 w-full max-w-2xl overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                <h4 class="text-zinc-400 text-sm font-semibold mb-4 uppercase tracking-wider">Star 历史</h4>
+                <a href="https://star-history.com/#opencut-app/opencut&Date" target="_blank" rel="noopener noreferrer">
+                    <img src="https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date&theme=dark"
+                        alt="Star History Chart" class="w-full h-auto rounded" />
+                </a>
+            </div>
+
+            <div class="text-zinc-500 text-sm space-y-2">
+                <p>基于 <a href="https://github.com/OpenCut-app/OpenCut/blob/main/LICENSE"
+                        class="text-blue-400 hover:underline">MIT 许可证</a> 开源发布。</p>
+                <p>&copy; <span id="current-year"></span> OpenCut 贡献者.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 交互脚本 -->
+    <script>
+        // 初始化年份
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // 渲染 Lucide 图标
+        lucide.createIcons();
+
+        // 复制代码功能 (兼容原生 JS)
+        function fallbackCopyTextToClipboard(text, btn) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showCopySuccess(btn);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess(btn) {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>';
+            lucide.createIcons(); // 重新渲染新插入的图标
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        function copyCode(btn, codeId) {
+            const codeText = document.getElementById(codeId).innerText;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    showCopySuccess(btn);
+                }).catch(err => {
+                    console.error('Async: Could not copy text: ', err);
+                    fallbackCopyTextToClipboard(codeText, btn);
+                });
+            } else {
+                fallbackCopyTextToClipboard(codeText, btn);
+            }
+        }
+    </script>
 </body>
+
 </html>
