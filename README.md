@@ -122,4 +122,4 @@ docker compose up -d
 
 ---
 
-![Star History Chart](https://api.star-history.com/svg?repos=opencut-app/opencut&type=Date)
+
