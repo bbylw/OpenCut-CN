@@ -1,7 +1,7 @@
 <table width="100%">
   <tr>
     <td align="left" width="120">
-      <img src="https://raw.githubusercontent.com/OpenCut-app/OpenCut/main/apps/web/public/logos/opencut/logo.svg" alt="OpenCut Logo" width="100" />
+      <img src="https://camo.githubusercontent.com/c48665a153781827f704a44abbf95c0cd6dcb0b72b1585beb1684b763b4ec9dd/68747470733a2f2f6173736574732e6f70656e6375742e6170702f6272616e64696e672f73796d626f6c2e737667" alt="OpenCut Logo" width="100" />
     </td>
     <td align="right">
       <h1>OpenCut</h1>
